@@ -1,0 +1,156 @@
+{
+    "name": "sugarcane-burn",
+    "authentication_required": true,
+    "images": {
+        "path": {
+            "Sentinel2": "{id}/S2.tif",
+            "Sentinel2_ref": "{id}/S2_ref.tif"
+        },
+        "shape": [
+            512,
+            512
+        ],
+        "metadata": "{id}/metadata.json"
+    },
+    "segmentation": {
+        "path": "images/{id}/mask.png",
+        "mask_encoding": "rgb",
+        "mask_area": [
+            0,
+            0,
+            512,
+            512
+        ]
+    },
+    "classes": [
+        {
+            "name": "No Data",
+            "description": "Layer without data.",
+            "colour": [
+                255,
+                255,
+                255,
+                0
+            ],
+            "user_colour": [
+                105,
+                84,
+                71,
+                255
+            ]
+        },
+        {
+            "name": "Burn Scar",
+            "description": "Burned areas.",
+            "colour": [
+                245,
+                39,
+                39,
+                255
+            ]
+        },
+        {
+            "name": "No Burn Scar",
+            "description": "Non burned areas.",
+            "colour": [
+                218,
+                20,
+                255,
+                255
+            ]}
+    ],
+    "views": {
+        "RGB": {
+            "description": "Natural color.",
+            "type": "image",
+            "data": [
+                "$Sentinel2.B4",
+                "$Sentinel2.B3",
+                "$Sentinel2.B2"
+            ]
+        },
+        "RGB_ref": {
+            "description": "Natural color for reference image.",
+            "type": "image",
+            "data": [
+                "$Sentinel2_ref.B4",
+                "$Sentinel2_ref.B3",
+                "$Sentinel2_ref.B2"
+            ]
+        },
+        "NRGB": {
+            "description": "Near-Infrared color.",
+            "type": "image",
+            "data": [
+                "$Sentinel2.B8",
+                "$Sentinel2.B4",
+                "$Sentinel2.B3"
+            ]
+        },
+        "NRGB_ref": {
+            "description": "Near-Infrared color for reference image.",
+            "type": "image",
+            "data": [
+                "$Sentinel2_ref.B8",
+                "$Sentinel2_ref.B4",
+                "$Sentinel2_ref.B3"
+            ]
+        },
+        "NSWIRR": {
+            "description": "Short-Wave Infrared color.",
+            "type": "image",
+            "data": [
+                "$Sentinel2.B9",
+                "$Sentinel2.B12",
+                "$Sentinel2.B4"
+            ]
+        },
+        "NSWIRR_ref": {
+            "description": "Short-Wave Infrared color for reference image.",
+            "type": "image",
+            "data": [
+                "$Sentinel2_ref.B9",
+                "$Sentinel2_ref.B12",
+                "$Sentinel2_ref.B4"
+            ]
+        },
+        "Agriculture": {
+            "description": "Agriculture color.",
+            "type": "image",
+            "data": [
+                "$Sentinel2.B11",
+                "$Sentinel2.B8",
+                "$Sentinel2.B2"
+            ]
+        },
+        "Agriculture_ref": {
+            "description": "Agriculture color for reference image.",
+            "type": "image",
+            "data": [
+                "$Sentinel2_ref.B11",
+                "$Sentinel2_ref.B8",
+                "$Sentinel2_ref.B2"
+            ]
+        },
+        "Black": {
+            "description": "Background",
+            "type": "image",
+            "data": [
+                "$Sentinel2.B5*0",
+                "$Sentinel2.B3*0",
+                "$Sentinel2.B2*0"
+            ]
+        },
+        "Bing": {
+            "description": "Aerial Imagery",
+            "type": "bingmap"
+        }
+    },
+    "view_groups": {
+        "default": [
+            "RGB_ref",
+            "RGB",
+            "Black"
+        ]
+    }
+}

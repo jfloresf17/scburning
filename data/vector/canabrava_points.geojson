@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "canabrava_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 1, "left": -9014223.3091000002, "top": -547692.0362, "right": -9011663.3091000002, "bottom": -550252.0362, "row_index": 0, "col_index": 0 }, "geometry": { "type": "Point", "coordinates": [ -80.956007771008871, -4.925509303896494 ] } }
+]
+}
