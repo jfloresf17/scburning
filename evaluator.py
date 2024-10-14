@@ -118,7 +118,7 @@ def get_predict_tensor(image_path: List[pathlib.Path]
         bands_src = src1.read(usefull_bands).astype(np.int16) / 10000
 
         tensor = np.concatenate([bands_src, src2.read(), src3.read(), src4.read(), 
-                                    src5.read(), src6.read(), src7.read()], axis=0)
+                                 src5.read(), src6.read(), src7.read()], axis=0)
         
         fill_tensor = np.nan_to_num(tensor, nan=-5)
 
@@ -165,7 +165,7 @@ def preprocess_image(image_path: List[pathlib.Path],
         mean = torch.tensor(mean_arr, dtype=torch.float32).view(-1, 1, 1)
         input = (input - mean) / std 
 
-    return input.unsqueeze(0)  # Añadir dimensión de batch
+    return input.unsqueeze(0)  # Add the batch dimension
 
 
 # Make prediction with the deep learning model (DL)
@@ -241,13 +241,13 @@ def save_ensemble_prob_models(ckpt_path: str,
     # Load the images paths
     filename = pathlib.Path(S2).name
 
-    # Deep learning model
+    # Predictions from the DL model
     wildfire_prob_01 = make_predict_dl(config, image_paths, ckpt_path)
 
     # Get the input tensor for the GBM model
     fill_tensor = get_predict_tensor(image_paths) 
 
-    # Probabilities 
+    # Predictions from the GBM model
     wildfire_prob_02 = make_predict_ml(fill_tensor, gbm_path, nmodels=10)    
 
     # Create a new tensor with the probabilities
@@ -298,7 +298,18 @@ def make_predict_lr(tensor: np.ndarray,
     return y_hat_2d
 
 
-def evaluate_metrics_ml(y_test, y_pred_proba):
+def evaluate_metrics_ml(y_test: np.array,
+                        y_pred_proba: np.array
+) -> None:
+    """
+    Evaluate the metrics for the Gradient Boosting Machine and
+    Logistic Regression models.
+
+    Args:
+        y_test (np.array): The true labels.
+        y_pred_proba (np.array): The predicted probabilities.
+    """
+    ## Log Loss
     logloss = log_loss(y_test, y_pred_proba)
 
     ## Evaluate the model

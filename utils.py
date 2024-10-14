@@ -5,6 +5,7 @@ import planetary_computer as pc
 import numpy as np
 import rasterio as rio
 import rioxarray
+import yaml
 from rasterio import Affine
 
 import geopandas as gpd
@@ -269,7 +270,7 @@ def download_datacube_data(roi: gpd.GeoSeries, model: torch.jit.ScriptModule,
             position = 0        
         
         # Download the cube data
-        for i, date in enumerate(da.time):
+        for i, _ in enumerate(da.time):
             if (position - 1) > i:
                 continue
             print(f"Downloading {i+1}/{len(da.time)}")            
@@ -819,6 +820,20 @@ def IRISsave(in_folder: str, out_folder: str, images: str) -> bool:
     
     return True
 
+# Load configuration from YAML
+def load_config(config_path: str) -> dict:
+    """
+    Load configuration from a YAML file.
+
+    Args:
+        config_path (str): The path to the configuration file.
+
+    Returns:
+        dict: The configuration dictionary.
+    """
+    with open(config_path, 'r') as file:
+        return yaml.safe_load(file)
+    
 
 def calculate_slope(dem_m: np.ndarray) -> np.ndarray:
     """

@@ -4,25 +4,28 @@ model_config:
   classes: 1
   encoder_weights: "imagenet"                     # "imagenet" for imagenet weights
   alpha: 0.5                                      # Class weights for loss calculation
-  weight: 15.0
-  # 15, 70
+  weight: 15.0  # 15, 75
+  mean: [
+         0.09662214, 0.12518128, 0.1384608 , 0.16792877,
+         0.21477791, 0.23969989, 0.23406947, 0.25146668, 
+         0.24264463, 0.20390241, 0.08009992, -0.03537915, 
+         0.2509175, -0.28438836, 11.42748347, 403.56001057
+        ]
 
-  mean: [0.09662214, 0.12518128, 0.1384608 , 0.16792877,
-         0.21477791, 0.23969989, 0.23406947, 0.25146668, 0.24264463,
-         0.20390241, 0.08009992, -0.03537915, 0.2509175, -0.28438836,
-         11.42748347, 403.56001057] 
-  std: [0.0386215 , 0.04478316, 0.06030442, 0.0549637,
-        0.05336002, 0.06797518, 0.06925664, 0.07251208, 0.06852754,
-        0.0776486,  0.08009992, 0.2755725, 0.23488626, 0.1935653,
-        13.57294616, 435.93792244]        
+  std: [
+        0.0386215 , 0.04478316, 0.06030442, 0.0549637,
+        0.05336002, 0.06797518, 0.06925664, 0.07251208, 
+        0.06852754, 0.0776486, 0.08009992, 0.2755725, 
+        0.23488626, 0.1935653, 13.57294616, 435.93792244
+      ]        
 
 dataset_config:
-  num_classes: 1
-  num_channels: 16                       # 12 | 16
+  num_classes: 1                  
   normalize: True                        # False | True
 
 train_config:
   dataset_path: "/media/tidop/Datos_4TB/databases/scburning/database"     # Path to dataset
+  csv_path: "/media/tidop/Datos_4TB/databases/scburning/gbm_train.csv"    # Path to csv file
   train_test_split: 0.8                                                   # Train/test split
   train_val_split: 0.8                                                    # Train/val split
   batch_size: 16
@@ -30,8 +33,18 @@ train_config:
   max_epochs: 50
   lr: 0.0001              
   threshold: 0.5
+  ckpt_name: "resnet50_norm_075"
 
 inference_config:
-  final_ckpt: "resnet50_norm_075"    # Path to final model checkpoint (if fine-tuning or not)
+    inference_folder: "/media/tidop/Datos_4TB/databases/scburning/inference"
+    lat: 48.8566
+    lon: 2.3522
+    start_date: "2021-01-01"
+    end_date: "2021-01-31"
+    cloud_model: "cloud_model.pt"
+    checkpoint_path: "checkpoints/resnet50_norm_075.ckpt"
+    gbm_models: "models/gbm"
+    stacking_model: "models/stacking_model.pkl"
+
 
 

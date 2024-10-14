@@ -44,8 +44,6 @@ for roi in aligned_rois.itertuples():
     download_datacube_data(roi, model,"2017-01-01","2022-12-31",S2BANDS, SCBURNING_FOLDER)  
    
 # SECOND STEP: PREPROCESS THE IMAGES
-SCBURNING_FOLDER = pathlib.Path("D:/scburning")
-
 ## Iterate over the folders
 tif_files = [x for folder in SCBURNING_FOLDER.iterdir() if folder.is_dir() 
              and folder.name != "reference" for x in folder.rglob("*.tif")]
@@ -257,7 +255,8 @@ ndwi_files = sorted(list(NDWI_FOLDER.glob("*.tif")))
 landcover_files = sorted(list(LANDCOVER_FOLDER.glob("*.tif")))
 
 tensor_files = list(zip(s2_files, nbr_files, badi_files, 
-                        slope_files, landcover_files, target_files))
+                        slope_files, ndvi_files, ndwi_files,
+                        landcover_files, target_files))
 
 table = []
 for i, zip_file in enumerate(tensor_files):
@@ -462,10 +461,8 @@ for point in gdf_pilot.itertuples():
     # Download the cube data
     download_datacube_data(point, model, "2023-01-01", "2024-08-01", S2BANDS, PILOT_FOLDER)
 
-
 # EIGHTH STEP: PLOTING THE RESULTS 
-from plots import vis_results
-import pathlib
+## For the different models ---------------------------------------------------
 DATASET_FOLDER = pathlib.Path("D:/dataset/database")
 IMG_FOLDER = pathlib.Path("data/img")
 factor = 1.9
@@ -544,4 +541,4 @@ factor = 1.9
 
 for i, file in enumerate(model_filenames):
     vis_comparation(file, gdf, EMERG_FOLDER, factor, model_thresholds, IMG_FOLDER) 
-
+    print(f"[{i+1}/{len(model_filenames)}]: Processed {file}")

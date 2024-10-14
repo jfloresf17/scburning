@@ -1,25 +1,23 @@
 import typer 
 import pytorch_lightning as pl
-from dataloader import SCBurningDataset, SCBurningDataModule
+from dataloader import SCBurningDataModule
 from model import lit_model
 import pathlib
-import wandb
-import yaml
 import torch
+from utils import load_config
 
 from sklearn.model_selection import train_test_split
 torch.set_float32_matmul_precision('high')
 
 app = typer.Typer()
 
-@app.command()
-def main(config_path: str):
-    config_path = "./config.yaml"
-    with open(config_path, 'r') as file:
-        config = yaml.safe_load(file)
-
+@app.command()    
+def train(config_path: str = typer.Option(..., "--config", "-c", 
+                                          help="Path to the config YAML file")):
     # Define finder lists
-    DATASET_FOLDER = pathlib.Path(config["train_config"]["dataset_path"])
+    config = load_config(config_path)
+    train_config = config["train_config"]
+    DATASET_FOLDER = pathlib.Path(train_config["dataset_path"])
 
     # Open file directories
     S2_FOLDER = DATASET_FOLDER / "S2"
@@ -44,26 +42,31 @@ def main(config_path: str):
     dlc_files = sorted(list(DLC_FOLDER.glob("*.tif")))
  
 
-    input_files = list(zip(s2_files, nbr_files, badi_files, slope_files, ndvi_files, ndwi_files, dlc_files))
+    input_files = list(zip(s2_files, nbr_files, badi_files, slope_files, 
+                           ndvi_files, ndwi_files, dlc_files))
     target_files = sorted(list((DATASET_FOLDER / "gbm").glob("*.tif")))
 
     files = list(zip(input_files, target_files))
 
     # Split the dataset
-    ttrain, test_files = train_test_split(files, train_size=config["train_config"]["train_test_split"], 
-                                          random_state=42)
+    ttrain, test_files = train_test_split(files, 
+                        train_size=train_config["train_test_split"], 
+                        random_state=42)
     
-    train_files, val_files = train_test_split(ttrain, train_size=config["train_config"]["train_val_split"], 
-                                              random_state=42)
-    
+    train_files, val_files = train_test_split(ttrain, 
+                            train_size=train_config["train_val_split"], 
+                            random_state=42)
+
     # Create dataloader
-    datamodule = SCBurningDataModule(train= train_files, val= val_files, test= test_files,
-                                     batch_size=config["train_config"]["batch_size"],
-                                     num_workers=config["train_config"]["num_workers"])
+    datamodule = SCBurningDataModule(train= train_files, 
+                                     val= val_files, 
+                                     test= test_files,
+                                     batch_size=train_config["batch_size"],
+                                     num_workers=train_config["num_workers"])
     datamodule.setup()
 
     # Initialize the model
-    model = lit_model(config_path=config_path)
+    model = lit_model(config=config)
 
     # Initialize the callbacks
     early_stopping = pl.callbacks.EarlyStopping(        
@@ -71,21 +74,16 @@ def main(config_path: str):
         patience=10,
         mode="min"
     )
-
    
     checkpoint = pl.callbacks.ModelCheckpoint(
         monitor="val_loss",
         dirpath="checkpoints/",
-        filename=f"{config['inference_config']['final_ckpt']}", 
+        filename=f"{train_config['ckpt_name']}", 
         mode="min",
         save_top_k=1
     )
 
     callbacks = [early_stopping, checkpoint]
-
-    # Initialize wandb logger
-    token = "317cfe042e74632a8151c8e0bfb620d64a847da3"
-    wandb.login(key=token)
 
     logger = pl.loggers.WandbLogger(project="scburning")       
 
@@ -108,4 +106,5 @@ def main(config_path: str):
     trainer.test(model, datamodule=datamodule, ckpt_path="best")
 
 if __name__ == "__main__":
+    # Run the training
     app()

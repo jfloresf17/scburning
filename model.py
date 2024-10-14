@@ -1,7 +1,6 @@
 import torch
 import os
 import polars
-import joblib
 import pathlib
 import wandb
 
@@ -14,12 +13,14 @@ from wandb.integration.lightgbm import wandb_callback, log_summary
 import torchmetrics
 
 from sklearn.base import BaseEstimator, ClassifierMixin
-import yaml
 import numpy as np
 from sklearn.metrics import cohen_kappa_score
 
 # Define a machine learning model
 # set parameters, bagging = bootstrap aggregation (make predictions based on multiple models)
+
+# Set token wandb login
+os.environ["WANDB_API_KEY"] = "317cfe042e74632a8151c8e0bfb620d64a847da3"
 
 params = {
     'task': 'train', # For training
@@ -36,18 +37,13 @@ params = {
     'gpu_device_id' : 0, # GPU device ID
 }
 
-# Set token wandb login
-os.environ["WANDB_API_KEY"] = "317cfe042e74632a8151c8e0bfb620d64a847da3"
-
 # Define LightGBM model function using 10-fold cross validation
-def lgb_model(csv, params=params,  n_fold=10):
+def lgb_model(config, params=params,  n_fold=10):
     # Initialize wandb
-    token = "317cfe042e74632a8151c8e0bfb620d64a847da3"
-    wandb.init(project="scburning", name="lightgbm")
-    wandb.login(key=token)
+    wandb.init(project="scburning", name="lightgbm", config=params)
 
     # Load dataset
-    csv = "/media/tidop/Datos_4TB/databases/scburning/database/gbm_train.csv"
+    csv = config['train_config']['csv_path']
     dataset = polars.read_csv(csv)
 
     # from polars to torch
@@ -71,7 +67,8 @@ def lgb_model(csv, params=params,  n_fold=10):
 
         # create dataset for lightgbm
         lgb_train = lgb.Dataset(data=X_train, label=y_train, feature_name= feature_names)
-        lgb_eval = lgb.Dataset(data=X_test, label=y_test, reference=lgb_train, feature_name= feature_names)
+        lgb_eval = lgb.Dataset(data=X_test, label=y_test, reference=lgb_train, 
+                               feature_name= feature_names)
 
         gbm = lgb.train(
             params,
@@ -96,7 +93,6 @@ def lgb_model(csv, params=params,  n_fold=10):
  
 # Define the class labels
 class_labels = {0: "no burning", 1: "burning"}
-
 
 # Define the dice loss function
 def dice_loss(y_hat, y):
@@ -145,24 +141,24 @@ class BinaryCohenKappa:
 
 # Define a deep learning model
 class lit_model(pl.LightningModule):
-    def __init__(self, config_path):
+    def __init__(self, config):
         super(lit_model, self).__init__()
         self.save_hyperparameters()
 
-        with open(config_path, 'r') as file:
-             config = yaml.safe_load(file)
+        model_config = config["model_config"]
+        train_config = config["train_config"]    
 
         self.model = smp.Unet(
-                    encoder_name=config["model_config"]["encoder_name"],   
-                    encoder_weights=config["model_config"]["encoder_weights"],
-                    in_channels=config["model_config"]["in_channels"],
-                    classes=config["model_config"]["classes"]
+                    encoder_name=model_config["encoder_name"],   
+                    encoder_weights=model_config["encoder_weights"],
+                    in_channels=model_config["in_channels"],
+                    classes=model_config["classes"]
                 )
 
-        self.lr = config["train_config"]["lr"]
-        self.alpha = config["model_config"]["alpha"]
-        self.weight = config["model_config"]["weight"]
-        self.threshold = config["train_config"]["threshold"]
+        self.lr = train_config["lr"]
+        self.alpha = model_config["alpha"]
+        self.weight = model_config["weight"]
+        self.threshold = train_config["threshold"]
 
         self.weights = torch.tensor([self.weight], dtype=torch.float32).to(self.device)
         self.wce = torch.nn.BCEWithLogitsLoss(pos_weight=self.weights)
