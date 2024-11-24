@@ -1,6 +1,6 @@
 # 🌱 Sugar Cane Burning Detection in North and Central Coast of Peru 🔥
 
-### 📜 [Project Page](http://127.0.0.1:5500/index.html) | 💻 [Thesis](https://github.com/jfloresf17/scburning_latex) | 📈 [Data](https://huggingface.co/datasets/jfloresf/scburning) | 📏 [Experiment Logs](https://wandb.ai/scigeo/scburning)
+### 📜 [Project Page](https://jfloresf17.github.io/scburningweb) | 💻 [Thesis](https://github.com/jfloresf17/scburning_latex) | 📈 [Data](https://huggingface.co/datasets/jfloresf/scburning) | 📏 [Experiment Logs](https://wandb.ai/scigeo/scburning)
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Yl2Rxv4e45JJ-ydmpUbXPAxVd0OZ7gNz?usp=sharing)
 
 <p align="center">
