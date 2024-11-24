@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from matplotlib import gridspec
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import ListedColormap
 from utils import (read_bands, get_rgb, create_burned_mask, 
                    vectorize_raster, rio_calculate_indexs)
 from evaluator import make_predict_lr
@@ -127,7 +127,8 @@ def vis_roc_curve (y_test: np.ndarray,
 
     ## Plot the ROC curve
     plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot(fpr, tpr, color='darkorange', lw=2, 
+             label='ROC curve (area = %0.2f)' % roc_auc)
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])

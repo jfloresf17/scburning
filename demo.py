@@ -482,12 +482,9 @@ for i, model in enumerate(models):
     print(f"[{i+1}/{len(models)}]: Processed {model}")
 
 ## For OEFA validation --------------------------------------------------------
-from plots import vis_oefaval
-import pathlib
-import geopandas as gpd
 EMERG_FOLDER = pathlib.Path("D:/dataset/emergencies")
-VECTOR_FOLDER = pathlib.Path("data/vector")
-IMG_FOLDER = pathlib.Path("data/img")
+VECTOR_FOLDER = pathlib.Path("D:/dataset/images/vector")
+IMG_FOLDER = pathlib.Path("D:/dataset/images/img")
 gdf = gpd.read_file("data/vector/historical_data_aligned.geojson")
 factor_list = [1.75,1.75,2.5,1.75,2.5]
 threshold_list = [0.2, 0.3, 0.50, 0.75, 0.90]

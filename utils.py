@@ -253,11 +253,11 @@ def download_datacube_data(roi: gpd.GeoSeries, model: torch.jit.ScriptModule,
     """
     try:
         # Create folder for the point
-        folder_name = out_path / roi.id
+        folder_name = out_path / roi['id']  # Acceso a la columna 'id'
         folder_name.mkdir(exist_ok=True)
 
         # Download the cube metadata
-        geom = roi.geometry
+        geom = roi['geometry']
         da = create_datacube(geom.x, geom.y, start_date, end_date, s2_bands)
         
         # Retake the download
@@ -265,7 +265,7 @@ def download_datacube_data(roi: gpd.GeoSeries, model: torch.jit.ScriptModule,
         creation_time = {x.stem: os.path.getctime(x) for x in folder_name.glob("*.tif")}
 
         if len(creation_time) != 0:
-            position = int(np.where(np.isin(da.id.values, max(creation_time)))[0])
+            position = int(np.where(np.isin(da["id"].values, max(creation_time)))[0])
         else:
             position = 0        
         
@@ -274,16 +274,17 @@ def download_datacube_data(roi: gpd.GeoSeries, model: torch.jit.ScriptModule,
             if (position - 1) > i:
                 continue
             print(f"Downloading {i+1}/{len(da.time)}")            
+            
             # get the S2 image id
-            data, data_np, id = get_datacube_data(da, i, start_date, end_date, s2_bands)
-            final_name = folder_name / f"{id}.tif"
+            data, data_np, image_id = get_datacube_data(da, i, start_date, end_date, s2_bands)
+            final_name = folder_name / f"{image_id}.tif"
 
             # apply the cloud model
             mask = cloud_mask(data_np, model)
 
             # if the cloud cover is greater than 10%, skip the image
             if (np.sum(mask > 0) / mask.size) > 0.1:
-                print(f"Skipping {id} due to cloud cover")
+                print(f"Skipping {image_id} due to cloud cover")
                 continue
 
             # Save the image as a GeoTIFF file
@@ -297,11 +298,11 @@ def download_datacube_data(roi: gpd.GeoSeries, model: torch.jit.ScriptModule,
                 blockxsize=256,
                 blockysize=256,
             )
-        print(f"Downloaded ROI: {roi.id} successfully")
+        print(f"Downloaded ROI: {roi['id']} successfully")
 
     except Exception as e:
         print(e)
-        pass   
+        pass
     
 
 def omit_black_files(tif_files: List[pathlib.Path],
@@ -496,6 +497,7 @@ def create_burned_mask( src_tuple: Union[rio.DatasetReader, Tuple[rio.DatasetRea
 
     return burn_masked
 
+
 def dbadi_filter(roi_groups: Dict[str, List[pathlib.Path]]) -> List[pathlib.Path]:
     """ 
     Filter the images with burning (+ 1 ha) using the dbadi index.
@@ -526,10 +528,11 @@ def dbadi_filter(roi_groups: Dict[str, List[pathlib.Path]]) -> List[pathlib.Path
                     burning_files.append([files[i+1], np.nansum(mask)])       
                     print(f"[{i+1}/{len(files)}]: Burning in {files[i+1]}")
                 else:
-                    print(f"[{i+1}/{len(files)}]: No burning in {files[i+1]}")
+                    print(f"[{i+1}/{len(files) - 1}]: No burning in {files[i+1]}")
         
         print(f"Processed ROI: {roi}")
-
+    
+    return burning_files
 
 def create_composite(roi_groups: Dict[str, List[str]], out_path: pathlib.Path) -> None:
     """ 

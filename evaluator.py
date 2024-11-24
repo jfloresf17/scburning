@@ -14,7 +14,7 @@ from sklearn.metrics import (log_loss, roc_curve, auc,
                              f1_score, recall_score, 
                              precision_score, jaccard_score, 
                              cohen_kappa_score)
-
+from utils import load_config
 
 # Gradient Boosting Machine (GBM)
 def make_predict_ml(tensor: np.ndarray, 
@@ -61,7 +61,7 @@ def make_predict_ml(tensor: np.ndarray,
 
 
 # Open the pre-trained model
-def load_model(config: str, 
+def load_model(config_path: str, 
                checkpoint_path: str
 ) -> lit_model:
     """
@@ -69,7 +69,7 @@ def load_model(config: str,
 
     Parameters
     ----------
-    config : str    
+    config_path : str    
         Path to the configuration file.
     checkpoint_path : str
         Path to the checkpoint file.
@@ -79,6 +79,7 @@ def load_model(config: str,
     lit_model
         The model with the pre-trained weights.
     """
+    config = load_config(config_path)
     model = lit_model(config)
     checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint['state_dict'])
@@ -126,7 +127,7 @@ def get_predict_tensor(image_path: List[pathlib.Path]
 
 # Get the input tensor
 def preprocess_image(image_path: List[pathlib.Path], 
-                     config: str
+                     config_path: str
 ) -> torch.Tensor:
     """
     Get the input tensor for the deep learning model.
@@ -136,7 +137,7 @@ def preprocess_image(image_path: List[pathlib.Path],
     image_path : List[pathlib.Path]
         List with the paths to the images.
 
-    config : str
+    config_path : str
         Path to the configuration file.
     
     Returns 
@@ -146,8 +147,7 @@ def preprocess_image(image_path: List[pathlib.Path],
 
     """
     # Open configuration file
-    with open(config, 'r') as file:
-        config = yaml.safe_load(file)
+    config = load_config(config_path)
     
     # Load the images paths
     fill_tensor = get_predict_tensor(image_path)
@@ -169,7 +169,7 @@ def preprocess_image(image_path: List[pathlib.Path],
 
 
 # Make prediction with the deep learning model (DL)
-def make_predict_dl(config: str,
+def make_predict_dl(config_path: str,
                     image_path: List[pathlib.Path], 
                     checkpoint_path: str
 ) -> np.ndarray:
@@ -178,7 +178,7 @@ def make_predict_dl(config: str,
 
     Parameters
     ----------
-    config : str
+    config_path : str
         Path to the configuration file.
     
     image_path : List[pathlib.Path]
@@ -193,10 +193,10 @@ def make_predict_dl(config: str,
         Prediction with shape (h, w).    
     """
     # Load the model with the pre-trained weights
-    model = load_model(config, checkpoint_path)
+    model = load_model(config_path, checkpoint_path)
     
     # Get the input tensor
-    input_tensor = preprocess_image(image_path, config).to(model.device)
+    input_tensor = preprocess_image(image_path, config_path).to(model.device)
     
     # Make prediction
     with torch.no_grad():
@@ -239,7 +239,7 @@ def save_ensemble_prob_models(ckpt_path: str,
     S2, *_ = image_paths
 
     # Load the images paths
-    filename = pathlib.Path(S2).name
+    filename = pathlib.Path(S2[0]).name
 
     # Predictions from the DL model
     wildfire_prob_01 = make_predict_dl(config, image_paths, ckpt_path)

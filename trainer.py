@@ -6,15 +6,20 @@ import pathlib
 import torch
 from utils import load_config
 
+# Set the seed for reproducibility
 from sklearn.model_selection import train_test_split
+torch.random.manual_seed(42)
+
+# Set the precision
 torch.set_float32_matmul_precision('high')
 
+# Create the app for the training
 app = typer.Typer()
-
 @app.command()    
+
 def train(config_path: str = typer.Option(..., "--config", "-c", 
                                           help="Path to the config YAML file")):
-    # Define finder lists
+    # Define the dataset folder
     config = load_config(config_path)
     train_config = config["train_config"]
     DATASET_FOLDER = pathlib.Path(train_config["dataset_path"])
@@ -40,13 +45,13 @@ def train(config_path: str = typer.Option(..., "--config", "-c",
 
     DLC_FOLDER = DATASET_FOLDER / "dlc"
     dlc_files = sorted(list(DLC_FOLDER.glob("*.tif")))
- 
 
-    input_files = list(zip(s2_files, nbr_files, badi_files, slope_files, 
-                           ndvi_files, ndwi_files, dlc_files))
+    # Get the target files
     target_files = sorted(list((DATASET_FOLDER / "gbm").glob("*.tif")))
-
-    files = list(zip(input_files, target_files))
+ 
+    # Zip the files in this order
+    files = list(zip(s2_files, nbr_files, badi_files, slope_files, 
+                    ndvi_files, ndwi_files, dlc_files, target_files))
 
     # Split the dataset
     ttrain, test_files = train_test_split(files, 

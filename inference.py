@@ -16,8 +16,11 @@ from evaluator import save_ensemble_prob_models, make_predict_lr
 def inference(config_path):
     # Load configuration file
     config = load_config(config_path)
+
     # Load parameters from config
     inference_config = config['inference_config']
+
+    # Load parameters from inference config
     INFERENCE_FOLDER = pathlib.Path(inference_config['inference_folder'])
     lat = float(inference_config['lat'])
     lon = float(inference_config['lon'])
@@ -39,27 +42,22 @@ def inference(config_path):
     ## Apply cloud, omit black areas and dBADI
     optimized_files = omit_black_files(s2_files, cloud_model)
 
-    ## Group files by ROI and sort by date
-    roi_groups = defaultdict(list)
-    for file in optimized_files:
-        roi_groups[file.parent.stem].append(file)
+    ## Order optimized files by date
+    sorted_optimized_files = sorted(optimized_files, 
+                            key=lambda x: pd.to_datetime(x.stem.split("_")[2]))
 
-    # Sort each group by date
-    for roi, files in roi_groups.items():
-        files.sort(key=lambda x: pd.to_datetime(x.stem.split("_")[2]))
+    burning_files = dbadi_filter(sorted_optimized_files)   
 
-    burning_files = dbadi_filter(roi_groups)   
     ## Save in new folder
     s2_filter_folder = INFERENCE_FOLDER / "S2_filtered"
     s2_filter_folder.mkdir(exist_ok=True)
 
+    ## Copy the files
     for file in burning_files:
-        ## Using shutil.copy
         shutil.copy(file, s2_filter_folder / file.name)
 
     print(f"Found {len(burning_files)} files to process.")
 
-    ## Apply the models
     ## Create the folders
     NBR_FOLDER = INFERENCE_FOLDER / "nbr"
     BADI_FOLDER = INFERENCE_FOLDER / "badi"
@@ -75,16 +73,20 @@ def inference(config_path):
     SLOPE_FOLDER.mkdir(exist_ok=True)
     LANDCOVER_FOLDER.mkdir(exist_ok=True)
 
-    ## Iterate over the files
+    ## Get the filtered files
     s2_filtered_files = sorted(list(s2_filter_folder.glob("*.tif")))
-    for i, file in enumerate(s2_filtered_files):
+
+    ## Iterate over the files
+    for i, file in enumerate(s2_filtered_files):        
         with rio.open(file) as src:
             # From Affine meta, get the center of the image
             affine = src.transform
             center_x = affine[2] + affine[0] * src.width / 2
             center_y = affine[5] + affine[4] * src.height / 2
+
             # Get the crs
             crs = src.crs.to_string()
+            
             # Get the lon and lat
             transformer = pyproj.Transformer.from_crs(crs, "epsg:4326", always_xy=True)
             lon, lat = transformer.transform(center_x, center_y)
@@ -111,6 +113,7 @@ def inference(config_path):
     
             profile = src.profile.copy()
             profile.update(count=1, dtype=rio.float32)
+
             # Save the indices
             with rio.open(NBR_FOLDER / file.name, "w", **profile) as dst:
                 dst.write(nbr[None])
@@ -153,7 +156,7 @@ def inference(config_path):
                             out_folder=INFERENCE_FOLDER / "predictions")
 
     ## Apply the stacking model
-    pred_files = list((INFERENCE_FOLDER / "predictions").glob("*.tif"))
+    pred_files = sorted(list((INFERENCE_FOLDER / "predictions").glob("*.tif")))
 
     for i, file in enumerate(pred_files):
         with rio.open(file) as src:
@@ -167,7 +170,9 @@ def inference(config_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='config.yaml', help='Path to the config YAML file.')
+    parser.add_argument('--config', type=str, 
+                        default='config.yaml', 
+                        help='Path to the config YAML file.')
     args = parser.parse_args()
     
     # Run inference

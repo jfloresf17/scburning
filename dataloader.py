@@ -4,7 +4,6 @@ import pytorch_lightning as pl
 import numpy as np
 import yaml
 
-
 with open('./config.yaml', 'r') as file:
     config = yaml.safe_load(file)
 

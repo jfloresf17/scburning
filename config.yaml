@@ -37,8 +37,8 @@ train_config:
 
 inference_config:
     inference_folder: "/media/tidop/Datos_4TB/databases/scburning/inference"
-    lat: 48.8566
-    lon: 2.3522
+    lat: -4.965
+    lon: -80.883
     start_date: "2021-01-01"
     end_date: "2021-01-31"
     cloud_model: "cloud_model.pt"

@@ -1,19 +1,23 @@
-# Sugar Cane Burning Detection in North and Central Coast of Peru
+# 🌱 Sugar Cane Burning Detection in North and Central Coast of Peru 🔥
 
-### [Project Page](http://127.0.0.1:5500/index.html) | [Thesis](https://arxiv.org/abs/2109.14713) | [Data](https://huggingface.co/datasets/jfloresf/scburning) | [Experiment Logs](https://wandb.ai/scigeo/scburning)
+### 📜 [Project Page](http://127.0.0.1:5500/index.html) | 💻 [Thesis](https://github.com/jfloresf17/scburning_latex) | 📈 [Data](https://huggingface.co/datasets/jfloresf/scburning) | 📏 [Experiment Logs](https://wandb.ai/scigeo/scburning)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Yl2Rxv4e45JJ-ydmpUbXPAxVd0OZ7gNz?usp=sharing)
 
 <p align="center">
-  <img width="100%" src="workflow/results.gif"/>
+  <img width="50%" src="assets/scburning.ico"/>
 </p>
 
-This repository contains an implementation of a ensembled model for sugar cane burning detection in North and Central Coast of Peru. The ensemble model is composed of a U-Net
-architecture and a LightGBM model. 
+This repository provides an implementation of an ensemble model for detecting sugar cane burning in the North and Central Coast of Peru. The model combines 📈 **Logistic Regression**, 🧠 **U-Net**, and 📊 **LightGBM** to accurately identify sugar cane burning events.
 
-The U-Net model is trained on the Sentinel-2 satellite images and the LightGBM model is trained on the NDVI index. The final prediction is
+- **U-Net** abstracts the spatial features from satellite images.
+- **LightGBM** extracts tabular features and predicts the burning pixel-wise probabilities.
 
-## Installation requirements
+- **Stacking Model** combines the predictions from U-Net and LightGBM to generate the final output.
 
-To install the required packages, run the following command:
+Let's get started and detect sugar cane burning together! 🌱🔥
+
+## 🛠️ Installation Requirements
+To run the code, you need a few dependencies. If you're using Conda, create a new environment and install the requirements with these commands:
 
 ```bash
 conda create -n scburning python=3.11
@@ -21,88 +25,127 @@ conda activate scburning
 pip install -r requirements.txt
 ```
 
-## Data
-The dataset is available in the Hugging Face Datasets library. To download the dataset, run the following command:
+## 💾 Data
+The dataset is available via the Hugging Face Datasets library. To download it, use the following commands:
 
-```bash
-nohup download_data.sh > progress.log &
-```
-Or
 ```bash
 git clone https://huggingface.co/datasets/jfloresf/scburning
 cd scburning
 ```
-Revert the multipart compression: merge first, then untar
+
+Revert the multipart compression by merging and extracting:
+
 ```bash
 cat database/database.tar.* | tar -xzvf - -i
 cat inference/emergencies/emergencies.tar.* | tar -xzvf - -i
 cat inference/pilot/pilot.tar.* | tar -xzvf - -i
 ```
 
-Consists in 1,254 images of 512x512 pixels with different
-folders: 'S2', 'NBR', 'BADI', 'SLOPE', 'NDVI', 'NDWI', 'LANDCOVER', 'TARGET' according the following structure:
+The dataset consists of 1,054 images (🖼 512x512 pixels), organized into different folders:
 
+- **Sentinel-2 10 bands** (`S2`)
+- **Normalized Burn Ratio** (`nbr`)
+- **Burned Area Detection Index** (`badi`)
+- **Slope in percentage** (`slope`)
+- **Normalized Difference Vegetation Index** (`ndvi`)
+- **Normalized Difference Water Index** (`ndwi`)
+- **Distance to Crop Cover** (`dlc`)
+- **Ground Truth** (`target`)
+
+Additionally, the dataset includes the **emergencies** (`58 images`) and **pilot** (`30 images`) folders for inference purposes with the same structure, except for the **Ground Truth** subfolder.
+
+### Folder Structure
 ```
 database/
 ├── badi/
-│   ├── ROI_1.tif
+│   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
 ├── dlc/
-│   ├── ROI_1.tif
+│   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+├── nbr/
+│   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+├── ndvi/
+│   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+|── ndwi/
+|   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+|── slope/
+|   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+|── S2/
+|   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
+|── target/
+|   ├── ROI_0000_01_04__..._20201008T082324.tif
+|   ├── ...
 ```
 
-The labels were generated using [IRIS](https://github.com/ESA-PhiLab/iris) platform according the [iris_metadatata.json](https://github.com/jfloresf17/scburning/blob/main/iris_metadata.json) config file.
+The labels were generated using the [IRIS](https://github.com/ESA-PhiLab/iris) platform according to the configuration in [iris_metadata.json](https://github.com/jfloresf17/scburning/blob/main/iris_metadata.json).
 
-Image of example of IRIS
 <p align="center">
-  <img width="100%" src="add/irisfig.png"/>
+  <img width="100%" src="assets/iris.png"/>
 </p>
 
-The workflow of the project is shown in the following image:
+## 🗃️ Workflow of Data Processing
+Here's a workflow diagram showing how data was processed and prepared for training the models:
+
 <p align="center">
-  <img width="80%" src="data/img/assets/area.png"/>
+  <img width="75%" src="assets/area.png"/>
 </p>
 
-## Training
+## 🧪 Ensemble Model Workflow
+Here's how our ensemble model works in practice:
+
 <p align="center">
-  <img width="80%" src="data/img/assets/training.png"/>
+  <img width="100%" src="assets/training.png"/>
 </p>
 
-### LightGBM
-Add image of the training process
+## 🏆 Results
+### 📈 Quantitative Results
+Below are the metrics for **U-Net**, **LightGBM**, and the **Stacking Model**:
+
+| **Metric**           | **U-Net** | **LightGBM** | **Stacking Model** |
+|------------------------|-----------|--------------|---------------------|
+| **F1 (↑)**            | 67.2      | 86.0         | **90.6**           |
+| **Recall (↑)**        | 77.2      | 93.8         | **95.3**           |
+| **Precision (↑)**     | 60.2      | 79.3         | **86.4**           |
+| **IoU (↑)**           | 51.1      | 75.4         | **82.8**           |
+| **Kappa (↑)**         | 67.5      | 81.2         | **87.5**           |
+
+### 🖼 Qualitative Results
 <p align="center">
-  <img width="100%" src="results/model.png"/>
+  <video width="80%" src="assets/oefa_val.mp4">
 </p>
 
-### U-Net
-To train the U-Net model, run the following command:
-```bash
-nohup python experiment.sh > unet.out &
-```
-Add image of the training process
+### 🛡️ Difference Between Models
+Using **BADI** as a conventional index for sugar cane burning detection, the image below shows the comparison among **U-Net**, **LightGBM**, and the **Stacking Model**:
 
-### Stacking Model
-Add image of the training process
-
-## Results 
-Add metric results
 <p align="center">
-  <img width="100%" src="data/img/assets/emergencies.png"/>
+  <img width="100%" src="assets/comparision.png"/>
 </p>
 
-Add image of the prediction
+### 🛠️ Inference in Pilot Area
 <p align="center">
-  <img width="100%" src="data/img/assets/pilot.png"/>
+  <img width="100%" src="assets/pilot.png"/>
 </p>
 
-## Inference (try the model)
-To try the model, run the following command:
+## 👨‍💻 Inference (Try the Model)
+### 🔗 Pre-trained Models
+You can use the pre-trained models available here:
 
-```bash
-nohup python inference.py --config config.yaml > inference.out &
-```
+| **Model**           | **Link** | **Size** |
+|---------------------|-----------|----------|
+| **U-Net**           | [📥 Download](https://huggingface.co/datasets/jfloresf/scburning/resolve/main/models/resnet50_norm_075.ckpt) | 391 MB |
+| **LightGBM**        | [📥 Download](https://huggingface.co/datasets/jfloresf/scburning/resolve/main/models/gbm.zip) | 251 kB |
+| **Stacking Model**  | [📥 Download](https://huggingface.co/datasets/jfloresf/scburning/resolve/main/models/stacking_model.pkl) | 1.23 kB |
 
-## Citation
-If you use this code for your research, please cite our paper:
+Try it out using our [Colab Notebook](https://colab.research.google.com/github/gee-community/geemap/blob/master).
+
+## 📜 Citation
+If you use this repository in your research, please consider citing our work:
 
 ```
 @article{flores2024sugar,
@@ -112,3 +155,6 @@ If you use this code for your research, please cite our paper:
   year={2024}
 }
 ```
+
+🚀 Ready to start? Clone the repo, set up the environment, and let's detect sugar cane burning together! 🏤🌱🔥
+
